@@ -1,5 +1,5 @@
 # fractal
-This repo features the code from the medium post and additionally a CLI app implementing the ideas derived there. The files generated are in the PPM format. To deal with this use [GIMP](https://www.gimp.org/).
+This repo features the code from the [medium post](https://medium.com/p/6ad53bbc8208) and additionally a CLI app implementing the ideas derived there. The files generated are in the PPM format. To deal with this use [GIMP](https://www.gimp.org/).
 
 ## CLI app usage
 Implementation is in the file `fractal.py`. An example usage is
@@ -8,7 +8,7 @@ Implementation is in the file `fractal.py`. An example usage is
 python fractal.py "1 2 3" -cm cubehelix -cmo normal -px 2000
 ````
 
-Here we wanted to produce a Julia set of a polynomial defined **z*z + 2 + 3** with the [colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html) cubehelix non-reversed (colormap order is normal), using $2000^2$ pixels. If we want to draw the Mandelbrot set, then instead of the polynomial we pass the string `mandelbrot` e.g.
+Here we wanted to produce a Julia set of a polynomial defined **z*z + 2 + 3** with the [colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html) cubehelix non-reversed (colormap order is normal), using 2000^2 pixels. If we want to draw the Mandelbrot set, then instead of the polynomial we pass the string `mandelbrot` e.g.
 
 ``` bash
 python fractal.py mandelbrot -cm gist_stern -it 200
