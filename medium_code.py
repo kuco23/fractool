@@ -107,7 +107,7 @@ def differentiate(poly):
     n, an = len(poly) - 1, poly[0]
     return [(n - i) * an for (i, an) in enumerate(poly[:-1])]
 
-def demJulia(p, dp, z, K, overflow, R):
+def demJulia(p, dp, z, K, R, overflow):
     zk, dk = z, 1
     for _ in range(K):
         if max(
@@ -124,7 +124,7 @@ def demJulia(p, dp, z, K, overflow, R):
         estimate = log2(abszk) * abszk / absdk
         return -log2(estimate)
 
-def drawDemJulia(n, p, colormap, K, overflow):
+def drawDemJulia(n, p, colormap, K, pow_, overflow):
     arr = zeros((n, n), dtype=float)
     dp = differentiate(p)
     r = radiusJulia(p, 1.000001)
@@ -132,12 +132,12 @@ def drawDemJulia(n, p, colormap, K, overflow):
     for i in range(n):
         for j in range(n):
             z = mapToComplexPlaneCenter(n, 0, r, i, j)
-            arr[i,j] = demJulia(p, dp, z, K, overflow, r)
+            arr[i,j] = demJulia(p, dp, z, K, r, overflow)
 
     m, M = arr.min(), arr.max()
     arr[arr == 0] = M
     normalized = Normalize(m, M)(arr)
-    adjusted = pow(normalized, 0.8)
+    adjusted = pow(normalized, pow_)
     colortable = colormap(adjusted)
             
     def rgbJulia(i, j):
