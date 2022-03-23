@@ -2,7 +2,7 @@ import cmath
 from math import sqrt, log2
 from functools import reduce
 
-from numpy import zeros
+from numpy import zeros, nan
 from matplotlib import cm
 from matplotlib.colors import Normalize
 
@@ -79,7 +79,7 @@ def demMandelbrot(c, K, overflow):
     if absck <= 2: return 0
     else:
         absdk = abs(dk)
-        if absdk == 0: return -1 # this will probably never happen
+        if absdk == 0: return nan # this will probably never happen
         estimate = log2(absck) * absck / absdk
         return -log2(estimate)
 
@@ -93,6 +93,7 @@ def drawDemMandelbrot(n, ctr, r, colormap, K, overflow):
 
     m, M = arr.min(), arr.max()
     arr[arr == 0] = M # 0 only denotes the inner set and it could spoil our normalization
+    arr[arr == nan] = M
     colortable = colormap(Normalize(m, M)(arr))
             
     def rgbMandelbrot(i, j):
@@ -120,7 +121,7 @@ def demJulia(p, dp, z, K, R, overflow):
     if abszk < R: return 0
     else:
         absdk = abs(dk)
-        if absdk == 0: return -1
+        if absdk == 0: return nan
         estimate = log2(abszk) * abszk / absdk
         return -log2(estimate)
 
@@ -136,6 +137,7 @@ def drawDemJulia(n, p, colormap, K, pow_, overflow):
 
     m, M = arr.min(), arr.max()
     arr[arr == 0] = M
+    arr[arr == nan] = M
     normalized = Normalize(m, M)(arr)
     adjusted = pow(normalized, pow_)
     colortable = colormap(adjusted)
