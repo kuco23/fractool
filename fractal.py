@@ -30,18 +30,18 @@ def juliaRadius(poly, l=L):
 
 def escapetimeMandelbrot(c, K):
     k, ck = 1, c
-    while k < K and quadabs(c) <= 4:
+    while k < K and quadabs(ck) <= 4:
         ck *= ck
         ck += c
         k += 1
-    return k
+    return k if k < K else 0
 
 def escapetimeJulia(z, p, K, R2):
     k, zk = 1, z
     while k < K and quadabs(zk) <= R2:
         zk = horner(p, zk)
         k += 1
-    return k
+    return k if k < K else 0
 
 def demMandelbrot(c, K, overflow=OVERFLOW):
     ck, dk = c, 1
@@ -91,7 +91,8 @@ def simulateRadius(
         dz = r * cmath.exp(I * phi)
         z = px * dz
         while quadabs(z) > rquad:
-            count = escapetimeJulia(z, p, non_escape_count, R2)
+            count = escapetimeJulia(
+                z, p, non_escape_count, R2)
             if count == non_escape_count: break
             z -= dz
         if quadabs(z) > maxradius:
@@ -103,8 +104,7 @@ def drawFractalPPM(
     ppm, algo, center, radius,
     px, colormap, power, cpc, ic,
     pb1, pb2
-):
-    
+): 
     def pointGenerator():
         cx, cy = center.real, center.imag
         ReS = cx - radius
@@ -127,7 +127,7 @@ def drawFractalPPM(
             
     m, M = pixels.min(), pixels.max()
     pixels[pixels == nan] = M # none or few points
-    pixels[pixels == 0] = M if ic else m
+    pixels[pixels == 0] = m if ic == 'continuous' else M
     normed = Normalize(m, M)(pixels)
     
     if cpc is not None:
@@ -207,8 +207,7 @@ if __name__ == '__main__':
         ):
             drawFractalPPM(
                 ppm, algo, complex(center), radius, px, 
-                colormap, cmp, cpc, ic.name == 'continuous', 
-                pb1, pb2
+                colormap, cmp, cpc, ic.name, pb1, pb2
             )
 
     @app.command('julia')
