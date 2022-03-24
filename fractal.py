@@ -104,13 +104,13 @@ def _algovals(algo, center, radius, px, pb):
         pb.update(px)
     return pixels
 
-def _values2colormat(pixels, colormap, cmp, cpc, ic):    
-    px, px = pixels.shape
+def _values2colormat(values, colormap, cmp, cpc, ic):    
+    px, px = values.shape
 
-    m, M = pixels.min(), pixels.max()
-    pixels[pixels == nan] = M # none or few points
-    pixels[pixels == 0] = m if ic == 'continuous' else M
-    normed = Normalize(m, M)(pixels)
+    m, M = values.min(), values.max()
+    values[values == nan] = M # none or few points
+    values[values == 0] = m if ic == 'continuous' else M
+    normed = Normalize(m, M)(values)
     
     if cpc is not None:
         p, pf, pc = cpc
@@ -134,6 +134,11 @@ def _colormat2ppm(ppm, colormat, pb):
             ppm.write(' '.join(map(str, rgb)) + '  ')
         pb.update(px)
 
+def _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb):
+    colormat = _values2colormat(
+        values, colormap, cmp, cpc, ic)
+    _colormat2ppm(ppm, colormat, pb)
+
 def createFractal(
     ppm, algo, center, radius,
     px, colormap, cmp, cpc, ic,
@@ -141,17 +146,13 @@ def createFractal(
 ): 
     values = _algovals(algo, center, radius, px, pb1)
     if cache: npsave(cachepath, values)
-    colormat = _values2colormat(
-        values, colormap, cmp, cpc, ic)
-    _colormat2ppm(ppm, colormat, pb2)
+    _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb2)
 
 def cachedFractal(
     ppm, cached, colormap, cmp, cpc, ic, pb
 ):  
     values = npload(cached)
-    colormat = _values2colormat(
-        values, colormap, cmp, cpc, ic)
-    _colormat2ppm(ppm, colormat, pb)
+    _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb)
 
 
 if __name__ == '__main__':
@@ -200,14 +201,16 @@ if __name__ == '__main__':
         **kwargs
     ):
         colormap = cm.get_cmap(cmap)
-        if cmo == 'reversed': 
+        if cmo.name == 'reversed': 
             colormap = colormap.reversed()
 
         if fn == '': fn = ' '.join(argv)
         filepath = img_dir / Path(fn + '.ppm')
         filepath.touch()
 
-        sfn = f'{argv[0]} {center} {radius} {px}' 
+        if argv[1] == 'mandelbrot': arg = 'mandelbrot'
+        if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
+        sfn = f'{arg} {center} {radius} {px}' 
         cachepath = data_dir / Path(sfn + '.npy')
 
         if cachepath.exists():
@@ -216,7 +219,7 @@ if __name__ == '__main__':
                 open(filepath, 'w', encoding='utf-8') as ppm,
                 tqdm(total=px*px, desc='image') as pb
             ): cachedFractal(
-                ppm, cachepath, colormap, cmp, cpc, ic, pb
+                ppm, cachepath, colormap, cmp, cpc, ic.name, pb
             )
         
         else:
