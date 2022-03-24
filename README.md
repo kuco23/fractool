@@ -41,4 +41,7 @@ python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j"
 
 Another argument is `-cmp`, which takes a positive real q and applies x -> power(x, q) to all values (less general then `-cpc`).
 
-We can also zoom into specific points by specifying centre with `-c` and the radius around the centre with `-r`. Note that if nothing is passed, the centre point will be 0 and the radius will be determined automatically. To set the filename of the ppm file use `-fn`. By default the files are saved by the command that generated them (you'll thank me later for this).
+We can also zoom into specific points by specifying centre with `-c` and the radius around the centre with `-r`. Note that if nothing is passed, the centre point will be 0 and the radius will be determined automatically. To set the filename of the ppm file use `-fn`. By default the files are saved by the command that generated them (you'll eventually thank me for this).
+
+## Cache
+Getting fractal iteration data can take a lot of time and computer power. But you may want to test a couple of different color configurations and don't want to generate fractal data each time. To solve this, cli takes an additional argument `--cache`, indicating that you want to save the data, used to generate the (non-colored) fractal. This is then saved in `data` folder and each time you run cli on an argument that was used to generate a cached fractal, it will be found in the data folder and used, so you don't have to wait again for all its iterations to complete.

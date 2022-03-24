@@ -1,9 +1,11 @@
-from sys import argv
-import math, cmath
+import math
 from functools import reduce
 from matplotlib import cm
 from matplotlib.colors import Normalize
-from numpy import empty, percentile, nan
+from numpy import (
+    nan, empty, percentile, 
+    save as npsave, load as npload
+)
 from tqdm import tqdm
 
 I = 0 + 1j
@@ -77,54 +79,34 @@ def demJulia(z, p, dp, K, R, overflow=OVERFLOW):
     estimate = math.log2(abszk) * abszk / absdk
     return -math.log2(estimate)
 
-# simulates radius for julia set to find its position
-def simulateRadius(
-    p, R, px, phisplit=PHISPLIT, 
-    non_escape_count=NON_ESCAPE_COUNT
-):
-    R2 = R * R
-    maxradius = 0
-    r = R / px
-    rquad = r * r
-    phi, dphi = 0, 2 * math.pi / phisplit
-    while phi < 2 * math.pi:
-        dz = r * cmath.exp(I * phi)
-        z = px * dz
-        while quadabs(z) > rquad:
-            count = escapetimeJulia(
-                z, p, non_escape_count, R2)
-            if count == non_escape_count: break
-            z -= dz
-        if quadabs(z) > maxradius:
-            maxradius = quadabs(z)
-        phi += dphi
-    return math.sqrt(maxradius) + 10 * r
 
-def drawFractalPPM(
-    ppm, algo, center, radius,
-    px, colormap, power, cpc, ic,
-    pb1, pb2
-): 
-    def pointGenerator():
-        cx, cy = center.real, center.imag
-        ReS = cx - radius
-        ImS = cy - radius
-        dim = dre = 2 * radius / px
-        dz = complex(dre, 0)
-        zk = complex(ReS, ImS)
+# generates px^2 points on complex plane 
+# with radius <= radius and center center
+def _complexlattice(center, radius, px):
+    cx, cy = center.real, center.imag
+    ReS = cx - radius
+    ImS = cy - radius
+    dim = dre = 2 * radius / px
+    dz = complex(dre, 0)
+    zk = complex(ReS, ImS)
+    for _ in range(px):
         for _ in range(px):
-            for _ in range(px):
-                zk += dz
-                yield zk
-            zk = complex(ReS, zk.imag + dim)
-    
-    points = pointGenerator()
+            zk += dz
+            yield zk
+        zk = complex(ReS, zk.imag + dim)
+
+def _algovals(algo, center, radius, px, pb): 
+    points = _complexlattice(center, radius, px)
     pixels = empty((px, px), dtype=float)
     for j in range(px):
         for i in range(px):
             pixels[i,j] = algo(next(points))
-        pb1.update(px)
-            
+        pb.update(px)
+    return pixels
+
+def _values2colormat(pixels, colormap, cmp, cpc, ic):    
+    px, px = pixels.shape
+
     m, M = pixels.min(), pixels.max()
     pixels[pixels == nan] = M # none or few points
     pixels[pixels == 0] = m if ic == 'continuous' else M
@@ -137,29 +119,53 @@ def drawFractalPPM(
         normed[filt] = pow(normed[filt], pf)
         filt = ~filt
         normed[filt] = pow(normed[filt], pc)
-    elif power != 1:
-        normed = pow(normed, power)
+    elif cmp != 1:
+        normed = pow(normed, cmp)
 
-    colors = colormap(normed)
+    return colormap(normed)
 
+def _colormat2ppm(ppm, colormat, pb):
+    px, px, _ = colormat.shape
     ppm.writelines(['P3\n', f'{px} {px}\n', '255\n'])
     for j in range(px):
         ppm.write('\n')
         for i in range(px):
-            rgb = map(round, 255 * colors[i][j][:3])
+            rgb = map(round, 255 * colormat[i,j,:3])
             ppm.write(' '.join(map(str, rgb)) + '  ')
-        pb2.update(px)
-    
-          
+        pb.update(px)
+
+def createFractal(
+    ppm, algo, center, radius,
+    px, colormap, cmp, cpc, ic,
+    cache, cachepath, pb1, pb2
+): 
+    values = _algovals(algo, center, radius, px, pb1)
+    if cache: npsave(cachepath, values)
+    colormat = _values2colormat(
+        values, colormap, cmp, cpc, ic)
+    _colormat2ppm(ppm, colormat, pb2)
+
+def cachedFractal(
+    ppm, cached, colormap, cmp, cpc, ic, pb
+):  
+    values = npload(cached)
+    colormat = _values2colormat(
+        values, colormap, cmp, cpc, ic)
+    _colormat2ppm(ppm, colormat, pb)
+
+
 if __name__ == '__main__':
 
+    from sys import argv
     from pathlib import Path
     from enum import Enum
     from typing import Tuple
     from typer import Typer, Option
 
     img_dir = Path('img/')
+    data_dir = Path('data/')
     img_dir.mkdir(exist_ok=True)
+    data_dir.mkdir(exist_ok=True)
 
     app = Typer()
 
@@ -174,6 +180,7 @@ if __name__ == '__main__':
     class InteriorColor(Enum):
         continuous = 'continuous'
         inverted = 'inverted'
+
     
     def checkConditions(center, radius, cpc, cmp, **kwargs):
         if center != 0 and radius is None:
@@ -187,28 +194,43 @@ if __name__ == '__main__':
                 'colormap power cannot be both provided'
             )
     
-    def processAndDraw(
+    def drawFractal(
         algo, radius, center, px, fn,
-        cmap, cmo, cmp, cpc, ic, 
+        cmap, cmo, cmp, cpc, ic, cache,
         **kwargs
     ):
+        colormap = cm.get_cmap(cmap)
+        if cmo == 'reversed': 
+            colormap = colormap.reversed()
+
         if fn == '': fn = ' '.join(argv)
         filepath = img_dir / Path(fn + '.ppm')
         filepath.touch()
 
-        colormap = cm.get_cmap(cmap)
-        if cmo == 'reversed': 
-            colormap = colormap.reversed()
-        
-        with (
-            open(filepath, 'w', encoding='utf-8') as ppm,
-            tqdm(total=px*px) as pb1,
-            tqdm(total=px*px) as pb2
-        ):
-            drawFractalPPM(
-                ppm, algo, complex(center), radius, px, 
-                colormap, cmp, cpc, ic.name, pb1, pb2
+        sfn = f'{argv[0]} {center} {radius} {px}' 
+        cachepath = data_dir / Path(sfn + '.npy')
+
+        if cachepath.exists():
+            print('using cached data...')
+            with (
+                open(filepath, 'w', encoding='utf-8') as ppm,
+                tqdm(total=px*px, desc='image') as pb
+            ): cachedFractal(
+                ppm, cachepath, colormap, cmp, cpc, ic, pb
             )
+        
+        else:
+            if cache: cachepath.touch()
+            with (
+                open(filepath, 'w', encoding='utf-8') as ppm,
+                tqdm(total=px*px, desc='data') as pb1,
+                tqdm(total=px*px, desc='image') as pb2
+            ):
+                createFractal(
+                    ppm, algo, complex(center), radius, px, 
+                    colormap, cmp, cpc, ic.name, cache, cachepath, 
+                    pb1, pb2
+                )
 
     @app.command('julia')
     def julia(
@@ -223,14 +245,14 @@ if __name__ == '__main__':
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
-        ic: InteriorColor = Option('continuous', '-ic')
+        ic: InteriorColor = Option('continuous', '-ic'),
+        cache: bool = False
     ):
         checkConditions(**locals())
 
         p = list(map(complex, polynomial.split()))
         R = juliaRadius(p)
-        if not radius: 
-            radius = simulateRadius(p, R, px)
+        if not radius: radius = R
         
         if alg.name == 'DEM':
             dp = differentiate(p)
@@ -239,7 +261,7 @@ if __name__ == '__main__':
             R2 = R * R
             algo = lambda z: escapetimeJulia(z, p, it, R2)
 
-        processAndDraw(**locals())
+        drawFractal(**locals())
 
     @app.command('mandelbrot')
     def mandelbrot(
@@ -253,7 +275,8 @@ if __name__ == '__main__':
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
-        ic: InteriorColor = Option('continuous', '-ic')
+        ic: InteriorColor = Option('continuous', '-ic'),
+        cache: bool = False
     ):
         checkConditions(**locals())
 
@@ -262,6 +285,6 @@ if __name__ == '__main__':
         if alg.name == 'escapetime': 
             algo = lambda c: escapetimeMandelbrot(c, it)
         
-        processAndDraw(**locals())
+        drawFractal(**locals())
 
     app()
