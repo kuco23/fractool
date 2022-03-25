@@ -196,13 +196,36 @@ if __name__ == '__main__':
             )
     
     def drawFractal(
-        algo, radius, center, px, fn,
-        cmap, cmo, cmp, cpc, ic, cache,
-        **kwargs
+        algo, radius, center, px, 
+        cmap, cmp, cpc, ic, cache,
+        filepath, cachepath, **kwargs
     ):
-        colormap = cm.get_cmap(cmap)
-        if cmo.name == 'reversed': 
-            colormap = colormap.reversed()
+        if cachepath.exists():
+            print('using cached data...')
+            with (
+                open(filepath, 'w', encoding='utf-8') as ppm,
+                tqdm(total=px*px, desc='image') as pb
+            ): cachedFractal(
+                ppm, cachepath, cmap, cmp, cpc, ic.name, pb
+            )
+        else:
+            if cache: cachepath.touch()
+            with (
+                open(filepath, 'w', encoding='utf-8') as ppm,
+                tqdm(total=px*px, desc='data') as pb1,
+                tqdm(total=px*px, desc='image') as pb2
+            ): createFractal(
+                ppm, algo, complex(center), radius, px, 
+                cmap, cmp, cpc, ic.name, cache, cachepath, 
+                pb1, pb2
+            )
+    
+    def getAllArgs(
+        cmap, cmo, fn, alg, center, radius, px, it, **kwargs
+    ):
+        cmap = cm.get_cmap(cmap)
+        if cmo.name == 'reversed':
+            cmap = cmap.reversed()
 
         if fn == '': fn = ' '.join(argv)
         filepath = img_dir / Path(fn + '.ppm')
@@ -210,30 +233,14 @@ if __name__ == '__main__':
 
         if argv[1] == 'mandelbrot': arg = 'mandelbrot'
         if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
-        sfn = f'{arg} {center} {radius} {px}' 
+        sfn = f'{arg} {alg.name} {center} {radius} {px} {it}' 
         cachepath = data_dir / Path(sfn + '.npy')
 
-        if cachepath.exists():
-            print('using cached data...')
-            with (
-                open(filepath, 'w', encoding='utf-8') as ppm,
-                tqdm(total=px*px, desc='image') as pb
-            ): cachedFractal(
-                ppm, cachepath, colormap, cmp, cpc, ic.name, pb
-            )
-        
-        else:
-            if cache: cachepath.touch()
-            with (
-                open(filepath, 'w', encoding='utf-8') as ppm,
-                tqdm(total=px*px, desc='data') as pb1,
-                tqdm(total=px*px, desc='image') as pb2
-            ):
-                createFractal(
-                    ppm, algo, complex(center), radius, px, 
-                    colormap, cmp, cpc, ic.name, cache, cachepath, 
-                    pb1, pb2
-                )
+        return {
+            'cmap': cmap, 
+            'filepath': filepath, 
+            'cachepath': cachepath
+        }
 
     @app.command('julia')
     def julia(
@@ -244,7 +251,7 @@ if __name__ == '__main__':
         fn: str = Option('', '-fn'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('viridis', '-cm'),
+        cmap: str = Option('inferno', '-cm'),
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
@@ -264,7 +271,8 @@ if __name__ == '__main__':
             R2 = R * R
             algo = lambda z: escapetimeJulia(z, p, it, R2)
 
-        drawFractal(**locals())
+        args = getAllArgs(**locals())
+        drawFractal(**{**locals(), **args})
 
     @app.command('mandelbrot')
     def mandelbrot(
@@ -274,7 +282,7 @@ if __name__ == '__main__':
         fn: str = Option('', '-fn'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('viridis', '-cm'),
+        cmap: str = Option('inferno', '-cm'),
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
@@ -288,6 +296,7 @@ if __name__ == '__main__':
         if alg.name == 'escapetime': 
             algo = lambda c: escapetimeMandelbrot(c, it)
         
-        drawFractal(**locals())
+        args = getAllArgs(**locals())
+        drawFractal(**{**locals(), **args})
 
     app()
