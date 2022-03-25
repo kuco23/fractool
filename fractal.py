@@ -200,6 +200,8 @@ if __name__ == '__main__':
         cmap, cmp, cpc, ic, cache,
         filepath, cachepath, **kwargs
     ):
+        filepath.touch()
+        
         if cachepath.exists():
             print('using cached data...')
             with (
@@ -229,7 +231,6 @@ if __name__ == '__main__':
 
         if fn == '': fn = ' '.join(argv)
         filepath = img_dir / Path(fn + '.ppm')
-        filepath.touch()
 
         if argv[1] == 'mandelbrot': arg = 'mandelbrot'
         if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
