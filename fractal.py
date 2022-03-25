@@ -2,10 +2,7 @@ import math
 from functools import reduce
 from matplotlib import cm
 from matplotlib.colors import Normalize
-from numpy import (
-    nan, empty, percentile, 
-    save as npsave, load as npload
-)
+import numpy as np
 from tqdm import tqdm
 
 I = 0 + 1j
@@ -59,7 +56,7 @@ def demMandelbrot(c, K, overflow=OVERFLOW):
     absck = abs(ck)
     if absck <= 2: return 0
     absdk = abs(dk)
-    if absdk == 0: return nan # rarely happens
+    if absdk == 0: return np.nan # rarely happens
     estimate = math.log2(absck) * absck / absdk
     return -math.log2(estimate)
 
@@ -75,7 +72,7 @@ def demJulia(z, p, dp, K, R, overflow=OVERFLOW):
     abszk = abs(zk)
     if abszk < R: return 0
     absdk = abs(dk)
-    if absdk == 0: return nan # rarely happens
+    if absdk == 0: return np.nan # rarely happens
     estimate = math.log2(abszk) * abszk / absdk
     return -math.log2(estimate)
 
@@ -97,7 +94,7 @@ def _complexlattice(center, radius, px):
 
 def _algovals(algo, center, radius, px, pb): 
     points = _complexlattice(center, radius, px)
-    pixels = empty((px, px), dtype=float)
+    pixels = np.empty((px, px), dtype=float)
     for j in range(px):
         for i in range(px):
             pixels[i,j] = algo(next(points))
@@ -108,13 +105,13 @@ def _values2colormat(values, colormap, cmp, cpc, ic):
     px, px = values.shape
 
     m, M = values.min(), values.max()
-    values[values == nan] = M # none or few points
+    values[values == np.nan] = M # none or few points
     values[values == 0] = m if ic == 'continuous' else M
     normed = Normalize(m, M)(values)
     
     if cpc is not None:
         p, pf, pc = cpc
-        q = percentile(normed, p)
+        q = np.percentile(normed, p)
         filt = normed <= q
         normed[filt] = pow(normed[filt], pf)
         filt = ~filt
@@ -122,7 +119,8 @@ def _values2colormat(values, colormap, cmp, cpc, ic):
     elif cmp != 1:
         normed = pow(normed, cmp)
 
-    return colormap(normed)
+    colormat = colormap(normed)
+    return (255 * colormat[:,:,:3]).astype(int)
 
 def _colormat2ppm(ppm, colormat, pb):
     px, px, _ = colormat.shape
@@ -130,8 +128,8 @@ def _colormat2ppm(ppm, colormat, pb):
     for j in range(px):
         ppm.write('\n')
         for i in range(px):
-            rgb = map(round, 255 * colormat[i,j,:3])
-            ppm.write(' '.join(map(str, rgb)) + '  ')
+            r, g, b = colormat[i,j]
+            ppm.write(f'{r} {g} {b}  ')
         pb.update(px)
 
 def _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb):
@@ -145,13 +143,13 @@ def createFractal(
     cache, cachepath, pb1, pb2
 ): 
     values = _algovals(algo, center, radius, px, pb1)
-    if cache: npsave(cachepath, values)
+    if cache: np.save(cachepath, values)
     _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb2)
 
 def cachedFractal(
     ppm, cached, colormap, cmp, cpc, ic, pb
 ):  
-    values = npload(cached)
+    values = np.load(cached)
     _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb)
 
 
@@ -222,7 +220,7 @@ if __name__ == '__main__':
                 pb1, pb2
             )
     
-    def getAllArgs(
+    def initializeArgs(
         cmap, cmo, fn, alg, center, radius, px, it, **kwargs
     ):
         cmap = cm.get_cmap(cmap)
@@ -272,7 +270,7 @@ if __name__ == '__main__':
             R2 = R * R
             algo = lambda z: escapetimeJulia(z, p, it, R2)
 
-        args = getAllArgs(**locals())
+        args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
     @app.command('mandelbrot')
@@ -297,7 +295,7 @@ if __name__ == '__main__':
         if alg.name == 'escapetime': 
             algo = lambda c: escapetimeMandelbrot(c, it)
         
-        args = getAllArgs(**locals())
+        args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
     app()
