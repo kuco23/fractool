@@ -25,45 +25,44 @@ def drawPPM(filename, rgbfun, n):
         for i in range(n):
             ppm.write('\n')
             for j in range(n):
-                rgb = rgbfun(i, j)
-                ppm.write(rgb + '  ')
+                rgb01 = rgbfun(i, j)
+                r,g,b = (int(255*x) for x in rgb01)
+                ppm.write(f'{r} {g} {b}  ')
 
 def drawPPMCircle(n, c, r):
-    def rgbcircle(i, j):
+    def rgbfun(i, j):
         radius = sqrt((i-c)**2 + (j-c)**2)
-        return '0 0 0' if radius < r else '255 255 255'
+        return (0,0,0) if radius < r else (1,1,1)
     drawPPM('circle.ppm', rgbcircle, n)
 
 def mapToComplexPlaneCenter(n, c, r, i, j):
     return c + r * complex(2 * j / n - 1, 2 * i / n - 1)
 
 def drawEscapetimeMandelbrot(n, ctr, r, colormap, K):
-    p = lambda c: [1, 0, c]
-    def rgbMandelbrot(i, j):
+    q = lambda c: [1, 0, c]
+    
+    def rgbfun(i, j):
         c = mapToComplexPlaneCenter(n, ctr, r, i, j)
-        k = escapetime(p(c), 0, 2, K)
-        if k == K: return '0 0 0'
-        else:
-            cmap = colormap(k / K)[:3]
-            return ' '.join(str(round(255 * cm)) for cm in cmap)
-    drawPPM('escapetime_mandelbrot.ppm', rgbMandelbrot, n)
+        k = escapetime(q(c), 0, 2, K)
+        return colormap(k/K)[:3] if k < K else (0,0,0)
 
-def radiusJulia(poly, L):
+    drawPPM('escapetime_mandelbrot.ppm', rgbfun, n)
+
+def radiusJulia(poly, L=1.0000001):
     n = len(poly) - 1
     an = abs(poly[0])
     C = sum(map(abs, poly)) - an
     return max(1, 2 * C / 2, pow(2 * L / an, 1 / (n-1)))
 
 def drawEscapetimeJulia(n, p, colormap, K):
-    rp = radiusJulia(p, 1.000001)
-    def rgbJulia(i, j):
+    rp = radiusJulia(p)
+    
+    def rgbfun(i, j):
         z = mapToComplexPlaneCenter(n, 0, rp, i, j)
         k = escapetime(p, z, rp, K)
-        if k == K: return '0 0 0'
-        else:
-            cmap = colormap(k / K)[:3]
-            return ' '.join(str(round(255 * cm)) for cm in cmap)
-    drawPPM('escapetime_julia.ppm', rgbJulia, n)
+        return colormap(k/K)[:3] if k < K else (0,0,0)
+    
+    drawPPM('escapetime_julia.ppm', rgbfun, n)
 
 def demMandelbrot(c, K, overflow):
     ck, dk = c, 1
@@ -96,12 +95,11 @@ def drawDemMandelbrot(n, ctr, r, colormap, K, overflow):
     arr[arr == nan] = M
     colortable = colormap(Normalize(m, M)(arr))
             
-    def rgbMandelbrot(i, j):
-        if arr[i, j] == M: return '0 0 0'
-        cmap = colortable[i,j][:3]
-        return ' '.join(str(round(255 * cm)) for cm in cmap)
+    def rgbfun(i, j):
+        if arr[i, j] == M: return (0,0,0)
+        else: return colortable[i,j][:3]
 
-    drawPPM('demMandelbrot.ppm', rgbMandelbrot, n)
+    drawPPM('demMandelbrot.ppm', rgbfun, n)
 
 # derivative of the given polynomial
 def differentiate(poly):
@@ -142,12 +140,11 @@ def drawDemJulia(n, p, colormap, K, pow_, overflow):
     adjusted = pow(normalized, pow_)
     colortable = colormap(adjusted)
             
-    def rgbJulia(i, j):
-        if arr[i, j] == M: return '0 0 0'
-        cmap = colortable[i,j][:3]
-        return ' '.join(str(round(255 * cm)) for cm in cmap)
+    def rgbfun(i, j):
+        if arr[i, j] == M: return (0,0,0)
+        else: return colortable[i,j][:3]
 
-    drawPPM('demJulia.ppm', rgbJulia, n)
+    drawPPM('demJulia.ppm', rgbfun, n)
     
 
 def inCardioidOrCircle(c):
@@ -158,7 +155,7 @@ def inCardioidOrCircle(c):
 if __name__ == '__main__':
 
     drawDemMandelbrot(
-        2000, -0.8, 1.4,
+        1000, -0.8, 1.4,
         cm.get_cmap('gist_stern').reversed(),
         100, 10**20
     )
