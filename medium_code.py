@@ -155,7 +155,7 @@ def inCardioidOrCircle(c):
 if __name__ == '__main__':
 
     drawDemMandelbrot(
-        500, -0.8, 1.4,
+        1000, -0.8, 1.4,
         cm.get_cmap('gist_stern').reversed(),
         100, 10**20
     )
