@@ -26,7 +26,7 @@ def drawPPM(filename, rgbfun, n):
             ppm.write('\n')
             for j in range(n):
                 rgb01 = rgbfun(i, j)
-                r,g,b = (int(255*x) for x in rgb01)
+                r,g,b,*a = (int(255*x) for x in rgb01)
                 ppm.write(f'{r} {g} {b}  ')
 
 def drawPPMCircle(n, c, r):
@@ -44,7 +44,7 @@ def drawEscapetimeMandelbrot(n, ctr, r, colormap, K):
     def rgbfun(i, j):
         c = mapToComplexPlaneCenter(n, ctr, r, i, j)
         k = escapetime(q(c), 0, 2, K)
-        return colormap(k/K)[:3] if k < K else (0,0,0)
+        return colormap(k/K) if k < K else (0,0,0)
 
     drawPPM('escapetime_mandelbrot.ppm', rgbfun, n)
 
@@ -60,7 +60,7 @@ def drawEscapetimeJulia(n, p, colormap, K):
     def rgbfun(i, j):
         z = mapToComplexPlaneCenter(n, 0, rp, i, j)
         k = escapetime(p, z, rp, K)
-        return colormap(k/K)[:3] if k < K else (0,0,0)
+        return colormap(k/K) if k < K else (0,0,0)
     
     drawPPM('escapetime_julia.ppm', rgbfun, n)
 
@@ -97,7 +97,7 @@ def drawDemMandelbrot(n, ctr, r, colormap, K, overflow):
             
     def rgbfun(i, j):
         if arr[i, j] == M: return (0,0,0)
-        else: return colortable[i,j][:3]
+        else: return colortable[i,j]
 
     drawPPM('demMandelbrot.ppm', rgbfun, n)
 
@@ -142,7 +142,7 @@ def drawDemJulia(n, p, colormap, K, pow_, overflow):
             
     def rgbfun(i, j):
         if arr[i, j] == M: return (0,0,0)
-        else: return colortable[i,j][:3]
+        else: return colortable[i,j]
 
     drawPPM('demJulia.ppm', rgbfun, n)
     
@@ -155,7 +155,7 @@ def inCardioidOrCircle(c):
 if __name__ == '__main__':
 
     drawDemMandelbrot(
-        1000, -0.8, 1.4,
+        500, -0.8, 1.4,
         cm.get_cmap('gist_stern').reversed(),
         100, 10**20
     )
