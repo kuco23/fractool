@@ -5,12 +5,8 @@ from matplotlib.colors import Normalize
 import numpy as np
 from tqdm import tqdm
 
-I = 0 + 1j
 L = 1.000001
 OVERFLOW = 10**20
-EPS = 0.000001
-PHISPLIT = 80
-NON_ESCAPE_COUNT = 3
 
 quadabs = lambda z: z.real * z.real + z.imag * z.imag
 
@@ -261,7 +257,10 @@ if __name__ == '__main__':
 
         p = list(map(complex, polynomial.split()))
         R = juliaRadius(p)
-        if not radius: radius = R
+        
+        if not radius:
+            radius = R
+            print(f'using radius {R}')
         
         if alg.name == 'DEM':
             dp = differentiate(p)
