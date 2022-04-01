@@ -43,7 +43,7 @@ python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j"
 -cm magma -it 1000 -cmo normal -cpc 85 2 0.25
 ```
 
-Another argument is `-cmp`, which takes a positive real q and applies x -> power(x, q) to all values (less general then `-cpc`).
+Another argument is `-cmp`, which takes a positive real q and applies x -> power(x, q) to all values (less general than `-cpc`).
 
 We can also zoom into specific points by specifying centre with `-c` and the radius around the centre with `-r`. Note that if nothing is passed, the centre point will be 0 and the radius will be determined automatically. To set the filename of the ppm file use `-fn`. By default the files are saved by the command that generated them (you'll eventually thank me for this).
 
@@ -54,4 +54,4 @@ python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j"
 -cm magma -it 1000 -cmo normal -cpc 85 2 0.25 --cache
 ```
 
-Now, if we want to draw the same julia set (same polynomial, algorithm, pixels, number of iterations, center and radius).
+Now, if we want to draw the same Julia set (same polynomial, algorithm, pixels, number of iterations, center, and radius), then you'll be notified that the cached image data will be used.
