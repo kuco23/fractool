@@ -33,7 +33,7 @@ def drawPPMCircle(n, c, r):
     def rgbfun(i, j):
         radius = sqrt((i-c)**2 + (j-c)**2)
         return (0,0,0) if radius < r else (1,1,1)
-    drawPPM('circle.ppm', rgbcircle, n)
+    drawPPM('circle.ppm', rgbfun, n)
 
 def mapToComplexPlaneCenter(n, c, r, i, j):
     return c + r * complex(2 * j / n - 1, 2 * i / n - 1)
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     drawDemMandelbrot(
         1000, -0.8, 1.4,
-        cm.get_cmap('gist_stern').reversed(),
+        cm.gist_stern.reversed(),
         100, 10**20
     )
     
