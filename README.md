@@ -1,5 +1,5 @@
 # fractal
-This repo features the code from the [medium post](https://medium.com/p/6ad53bbc8208) and additionally a CLI app implementing the ideas derived there. The files generated are in the PPM format. To deal with this use [GIMP](https://www.gimp.org/). Images will be generated in the newly created `img` folder.
+This repo features a CLI app implementing the fractal drawing process via two algorithms - escapetime and DEM. The files generated are in the PPM format. To deal with this use [GIMP](https://www.gimp.org/). Images will be generated in the newly created `img` folder.
 
 ## CLI app usage
 Implementation is in the file `fractal.py`. It allows you to draw and color fractals. An example usage is
