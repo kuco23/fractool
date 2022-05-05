@@ -156,6 +156,7 @@ if __name__ == '__main__':
     from enum import Enum
     from typing import Tuple
     from typer import Typer, Option
+    from cv2 import imread, imwrite # pip install opencv-python
 
     img_dir = Path('img/')
     data_dir = Path('data/')
@@ -175,7 +176,6 @@ if __name__ == '__main__':
     class InteriorColor(Enum):
         continuous = 'continuous'
         inverted = 'inverted'
-
     
     def checkConditions(center, radius, cpc, cmp, **kwargs):
         if center != 0 and radius is None:
@@ -192,10 +192,11 @@ if __name__ == '__main__':
     def drawFractal(
         algo, radius, center, px, 
         cmap, cmp, cpc, ic, cache,
-        filepath, cachepath, **kwargs
+        filepath, cachepath, extension, **kwargs
     ):
         filepath.touch()
         
+        # check if data for image is cached
         if cachepath.exists():
             print('using cached data...')
             with (
@@ -215,7 +216,13 @@ if __name__ == '__main__':
                 cmap, cmp, cpc, ic.name, cache, cachepath, 
                 pb1, pb2
             )
-    
+        
+        # change extension if required
+        if extension != 'ppm':
+            img = imread(str(filepath))
+            imwrite(str(filepath.with_suffix(extension)), img)
+            filepath.unlink()
+
     def initializeArgs(
         cmap, cmo, fn, alg, center, radius, px, it, **kwargs
     ):
@@ -251,6 +258,7 @@ if __name__ == '__main__':
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
+        extension: str = Option('ppm', '-ext'),
         cache: bool = False
     ):
         checkConditions(**locals())
@@ -280,11 +288,12 @@ if __name__ == '__main__':
         fn: str = Option('', '-fn'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('inferno', '-cm'),
+        cmap: str = Option('gist_stern', '-cm'),
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
+        extension: str = Option('ppm', '-ext'),
         cache: bool = False
     ):
         checkConditions(**locals())

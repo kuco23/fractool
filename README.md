@@ -55,3 +55,9 @@ python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j"
 ```
 
 Now, if we want to draw the same Julia set (same polynomial, algorithm, pixels, number of iterations, center, and radius), then you'll be notified that the cached image data will be used.
+
+You can also specify the extension you want your `ppm` image to be converted to:
+
+```bash
+python fractal.py mandelbrot -ext .png
+```
