@@ -7,7 +7,7 @@ It accepts multiple arguments that help with fractal image creation. Two example
 
 ```bash
 python fractal.py julia "1 0 0.5" 
--cm cubehelix -px 2000 -fn julia_img -ext .png --cached
+-cm cubehelix -px 2000 -fn julia_img -ext .png --cache
 ```
 ```bash
 python fractal.py mandelbrot 
@@ -28,7 +28,7 @@ python fractal.py mandelbrot
 - **colormap percentage power:** This is a generalization of colormap power. Powering all the values by the same power may bring those close to 1 lower as well as those already close to 0. This is fixed by differentating the powers applied to some high and low values, which are specified by the given percentage. Use as e.g. `-cpc 91 4 0.25`. See examples for more.
 - **file name:** To set the filename of the file use `-fn`. By default files are saved by the command that generated them (you'll eventually thank me for this).
 - **extension:** To set the image type, set `-ext` following by some extension. Default is `.png`.
-- **cache:** Drawing a fractal image can take a lot of time, so you might save that raw data by adding `--cached` to your command. Then you can test different colorings without having to again generate the fractal data. Whenever you have cached data available (in the `data` folder) for a chosen command, the program recognized this and uses that cached data.
+- **cache:** Drawing a fractal image can take a lot of time, so you might save that raw data by adding `--cache` to your command. Then you can test different colorings without having to again generate the fractal data. Whenever you have cached data available (in the `data` folder) for a chosen command, the program recognized this and uses that cached data.
 
 
 ### Examples
