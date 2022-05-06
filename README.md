@@ -16,8 +16,8 @@ python fractal.py mandelbrot
 
 ### CLI arguments
 
-- **type:** The first argument is either `julia` or `mandelbrot` depending on which types of fractal you want to draw.
-- **polynomial:** If you chose `julia` as the first argument, then you must alwo specify the associated polynomial. This is specified as a string, e.g. `"1 2 3"` which means the polynomial `1 + z^2 + 2*z + 3`.
+- **type:** The first argument is either `julia` or `mandelbrot` depending on which type of fractal you want to draw.
+- **polynomial:** If you chose `julia` as the first argument, then you must also specify the associated polynomial. This is specified as a string, e.g. `"1 2 3"` which means the polynomial `1*z^2 + 2*z + 3`.
 - **center:** This is the center around which we focus our image. It defaults to 0 and is set by e.g. `"1 + 0.5j"`.
 - **radius:** This is the radius around the center. If center is 0, then the radius can be calculated algorithmically. Elese, you have to specify it.
 - **colormap:** You can specify the colormap by adding `-cm` following by some `matplotlib` colormap name. You can check the available options [here](https://matplotlib.org/stable/tutorials/colors/colormaps.html) or `import cm from matplotlib` and doing `dir(cm)`.
