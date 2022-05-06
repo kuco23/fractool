@@ -2,62 +2,47 @@
 This repo features a CLI app implementing the fractal drawing process via two algorithms - escapetime and DEM. The files generated are in the PPM format. To deal with this use [GIMP](https://www.gimp.org/). Images will be generated in the newly created `img` folder.
 
 ## CLI app usage
-Implementation is in the file `fractal.py`. It allows you to draw and color fractals. An example usage is
+Implementation is in the file `fractal.py`. It allows you to draw two types of fractals - Julia sets and the Mandelbrot set. 
+It accepts multiple arguments that help with fractal image creation. Two examples:
 
 ```bash
-python fractal.py julia "1 2 3" -cm cubehelix -cmo normal -px 2000
-````
-
-We produced a Julia set of a polynomial, defined by **z*z + 2 + 3** and colored it with [colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html) cubehelix, which was non-reversed (colormap order is normal) with 2000^2 pixels. 
-
-Separately, we can draw the mandelbrot as
-
-``` bash
-python fractal.py mandelbrot -cm gist_stern -it 200 -alg DEM
+python fractal.py julia "1 0 0.5" 
+-cm cubehelix -px 2000 -fn julia_img -ext .png --cached
 ```
-
-Here `-it 200` implies that 200 iterations will be used in the DEM algorithm. Another algorithm that can be used is `escapetime`. DEM is the default.
-
 ```bash
-python fractal.py mandelbrot -alg escapetime -cm gist_stern -it 100 -ic inverted
+python fractal.py mandelbrot 
+-cm gist_stern_r -it 200 -alg DEM -fn mandelbrot_img -ext .jpg
 ```
 
-Here `-ic inverted` implies that the colour of the set interior will be coloured with the outermost colour (defined inside the given colourmap - in this case `gist_stern`). This is done mostly when using escapetime, so the interior is dark like the area far from the set. In this way the bright border is better visible. 
+### CLI arguments
 
-More advance usage can be seen in the following cases
+- **type:** The first argument is either `julia` or `mandelbrot` depending on which types of fractal you want to draw.
+- **polynomial:** If you chose `julia` as the first argument, then you must alwo specify the associated polynomial. This is specified as a string, e.g. `"1 2 3"` which means the polynomial `1 + z^2 + 2*z + 3`.
+- **center:** This is the center around which we focus our image. It defaults to 0 and is set by e.g. `"1 + 0.5j"`.
+- **radius:** This is the radius around the center. If center is 0, then the radius can be calculated algorithmically. Elese, you have to specify it.
+- **colormap:** You can specify the colormap by adding `-cm` following by some `matplotlib` colormap name. You can check the available options [here](https://matplotlib.org/stable/tutorials/colors/colormaps.html) or `import cm from matplotlib` and doing `dir(cm)`.
+- **algorithm:** You can specify the algorithm that is used for drawing a chosen fractal by using `-alg` following by either `escapetime` or `DEM` (Distance estimation method). 
+- **iterations:** This is the number of iterations that approximate convergance, used by the chosen algorithm. This can be set by `-it`.
+- **invert colormap:** You can imply that the set interior will be coloured with the outermost colour (defined by the chosen colormap) by doing `-ic` followed by either `continuous` or `inverted`. This is done mostly when using escapetime, so the interior is dark like the area far from the set. In this way the bright border is better visible.
+- **colormap power:** Sometimes the border is thin and barely visible, because all iteration values returned by the algorithm are either very close to 0 or very close to 1. This can be fixed by applying roots or powers. It can be done by e.g. `-cmp 2`, which  squares all values before applying the colormap. So, it brings numbers close to 1 lower and out of hiding.
+- **colormap percentage power:** This is a generalization of colormap power. Powering all the values by the same power may bring those close to 1 lower as well as those already close to 0. This is fixed by differentating the powers applied to some high and low values, which are specified by the given percentage. Use as e.g. `-cpc 91 4 0.25`. See examples for more.
+- **file name:** To set the filename of the file use `-fn`. By default files are saved by the command that generated them (you'll eventually thank me for this).
+- **extension:** To set the image type, set `-ext` following by some extension. Default is `.png`.
+- **cache:** Drawing a fractal image can take a lot of time, so you might save that raw data by adding `--cached` to your command. Then you can test different colorings without having to again generate the fractal data. Whenever you have cached data available (in the `data` folder) for a chosen command, the program recognized this and uses that cached data.
 
+
+### Examples
+
+To understand `-cpc` command see the following examples:
 ```bash
 python fractal.py julia "1 0 -0.7510894579318156+0.11771693494277351j" 
--cm cubehelix -cmo normal
+-cm cubehelix
 ```
-
 ```bash
 python fractal.py julia "1 0 -0.7510894579318156+0.11771693494277351j" 
--cm cubehelix -cmo normal -cpc 91 4 0.25
+-cm cubehelix -cpc 91 4 0.25
 ```
-
-Here we use `-cpc` argument to specify that we want to take the upper 91% of values and apply x -> power(x, 4) on them. The other 9% will get applied x -> power(x, 1/4). In this way we can increase the contrast between the points very close to interior and those a little further. Another example is
-
 ```bash
 python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j" 
--cm magma -it 1000 -cmo normal -cpc 85 2 0.25
-```
-
-Another argument is `-cmp`, which takes a positive real q and applies x -> power(x, q) to all values (less general than `-cpc`).
-
-We can also zoom into specific points by specifying centre with `-c` and the radius around the centre with `-r`. Note that if nothing is passed, the centre point will be 0 and the radius will be determined automatically. To set the filename of the ppm file use `-fn`. By default the files are saved by the command that generated them (you'll eventually thank me for this).
-
-Getting fractal iteration data can take a lot of time and computer power. But you may want to test a couple of different color configurations and don't want to generate fractal data each time. To solve this, cli takes an additional argument `--cache`, indicating that you want to save the data, used to generate the (non-colored) fractal. This is then saved in `data` folder and each time you run cli on an argument that was used to generate a cached fractal, it will be found in the data folder and used, so you don't have to wait again for all its iterations to complete.
-
-```bash
-python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j" 
--cm magma -it 1000 -cmo normal -cpc 85 2 0.25 --cache
-```
-
-Now, if we want to draw the same Julia set (same polynomial, algorithm, pixels, number of iterations, center, and radius), then you'll be notified that the cached image data will be used.
-
-You can also specify the extension you want your image to be converted to (default is `.png`)
-
-```bash
-python fractal.py mandelbrot -ext .jpg
+-cm magma -it 1000 -cpc 85 2 0.25
 ```

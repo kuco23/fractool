@@ -137,10 +137,6 @@ if __name__ == '__main__':
         escapetime = 'escapetime'
         DEM = 'DEM'
     
-    class ColorMapOrder(Enum):
-        normal = 'normal'
-        reversed = 'reversed'
-    
     class InteriorColor(Enum):
         continuous = 'continuous'
         inverted = 'inverted'
@@ -176,29 +172,22 @@ if __name__ == '__main__':
                 np.save(cachepath, values)
 
         colormat = _applyColors(values, cmap, cmp, cpc, ic)
-        imwrite(str(filepath), colormat[::-1])
+        imwrite(str(filepath), colormat[...,::-1])
 
     def initializeArgs(
-        cmap, cmo, fn, ext, alg, 
+        cmap, fn, ext, alg,  
         center, radius, px, it, **kwargs
-    ):
-        cmap = cm.get_cmap(cmap)
-        if cmo.name == 'reversed':
-            cmap = cmap.reversed()
-
-        if fn == '': fn = ' '.join(argv)
-        filepath = img_dir / Path(fn + ext)
-
+    ):  
+        filename = Path((fn or ' '.join(argv)) + ext)
         if argv[1] == 'mandelbrot': arg = 'mandelbrot'
         if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
-        sfn = f'{arg} {alg.name} {center} {radius} {px} {it}' 
-        cachepath = data_dir / Path(sfn + '.npy')
+        cachename = f'{arg} {alg.name} {center} {radius} {px} {it}.npy' 
 
         return {
             'center': complex(center),
-            'cmap': cmap, 
-            'filepath': filepath, 
-            'cachepath': cachepath
+            'cmap': cm.get_cmap(cmap), 
+            'filepath': img_dir / filename, 
+            'cachepath': data_dir / cachename
         }
 
     @app.command('julia')
@@ -212,7 +201,6 @@ if __name__ == '__main__':
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
         cmap: str = Option('inferno', '-cm'),
-        cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
@@ -246,8 +234,7 @@ if __name__ == '__main__':
         ext: str = Option('.png', '-ext'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('inferno', '-cm'),
-        cmo: ColorMapOrder = Option('normal', '-cmo'),
+        cmap: str = Option('gist_stern_r', '-cm'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
