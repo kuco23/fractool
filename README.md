@@ -13,7 +13,7 @@ We produced a Julia set of a polynomial, defined by **z*z + 2 + 3** and colored 
 Separately, we can draw the mandelbrot as
 
 ``` bash
-python fractal.py mandelbrot -cm gist_stern -it 200 -alg deM
+python fractal.py mandelbrot -cm gist_stern -it 200 -alg DEM
 ```
 
 Here `-it 200` implies that 200 iterations will be used in the DEM algorithm. Another algorithm that can be used is `escapetime`. DEM is the default.
@@ -56,8 +56,8 @@ python fractal.py julia "1 0 0.1567002004882749+0.6527033090669409j"
 
 Now, if we want to draw the same Julia set (same polynomial, algorithm, pixels, number of iterations, center, and radius), then you'll be notified that the cached image data will be used.
 
-You can also specify the extension you want your `ppm` image to be converted to:
+You can also specify the extension you want your image to be converted to (default is `.png`)
 
 ```bash
-python fractal.py mandelbrot -ext .png
+python fractal.py mandelbrot -ext .jpg
 ```

@@ -88,18 +88,16 @@ def _complexlattice(center, radius, px):
             yield zk
         zk = complex(ReS, zk.imag + dim)
 
-def _algovals(algo, center, radius, px, pb): 
+def _algoValues(algo, center, radius, px, pb): 
     points = _complexlattice(center, radius, px)
     pixels = np.empty((px, px), dtype=float)
     for j in range(px):
         for i in range(px):
-            pixels[i,j] = algo(next(points))
+            pixels[j,i] = algo(next(points))
         pb.update(px)
     return pixels
 
-def _values2colormat(values, colormap, cmp, cpc, ic):    
-    px, px = values.shape
-
+def _applyColors(values, colormap, cmp, cpc, ic):    
     m, M = values.min(), values.max()
     values[values == np.nan] = M # none or few points
     values[values == 0] = m if ic == 'continuous' else M
@@ -118,36 +116,6 @@ def _values2colormat(values, colormap, cmp, cpc, ic):
     colormat = colormap(normed)
     return (255 * colormat[:,:,:3]).astype(int)
 
-def _colormat2ppm(ppm, colormat, pb):
-    px, px, _ = colormat.shape
-    ppm.writelines(['P3\n', f'{px} {px}\n', '255\n'])
-    for j in range(px):
-        ppm.write('\n')
-        for i in range(px):
-            r, g, b = colormat[i,j]
-            ppm.write(f'{r} {g} {b}  ')
-        pb.update(px)
-
-def _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb):
-    colormat = _values2colormat(
-        values, colormap, cmp, cpc, ic)
-    _colormat2ppm(ppm, colormat, pb)
-
-def createFractal(
-    ppm, algo, center, radius,
-    px, colormap, cmp, cpc, ic,
-    cache, cachepath, pb1, pb2
-): 
-    values = _algovals(algo, center, radius, px, pb1)
-    if cache: np.save(cachepath, values)
-    _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb2)
-
-def cachedFractal(
-    ppm, cached, colormap, cmp, cpc, ic, pb
-):  
-    values = np.load(cached)
-    _values2ppm(ppm, values, colormap, cmp, cpc, ic, pb)
-
 
 if __name__ == '__main__':
 
@@ -156,7 +124,7 @@ if __name__ == '__main__':
     from enum import Enum
     from typing import Tuple
     from typer import Typer, Option
-    from cv2 import imread, imwrite # pip install opencv-python
+    from cv2 import imwrite # pip install opencv-python
 
     img_dir = Path('img/')
     data_dir = Path('data/')
@@ -192,46 +160,34 @@ if __name__ == '__main__':
     def drawFractal(
         algo, radius, center, px, 
         cmap, cmp, cpc, ic, cache,
-        filepath, cachepath, extension, **kwargs
+        filepath, cachepath, **kwargs
     ):
         filepath.touch()
         
         # check if data for image is cached
         if cachepath.exists():
             print('using cached data...')
-            with (
-                open(filepath, 'w', encoding='utf-8') as ppm,
-                tqdm(total=px*px, desc='image') as pb
-            ): cachedFractal(
-                ppm, cachepath, cmap, cmp, cpc, ic.name, pb
-            )
+            values = np.load(cachepath)
         else:
-            if cache: cachepath.touch()
-            with (
-                open(filepath, 'w', encoding='utf-8') as ppm,
-                tqdm(total=px*px, desc='data') as pb1,
-                tqdm(total=px*px, desc='image') as pb2
-            ): createFractal(
-                ppm, algo, complex(center), radius, px, 
-                cmap, cmp, cpc, ic.name, cache, cachepath, 
-                pb1, pb2
-            )
-        
-        # change extension if required
-        if extension != 'ppm':
-            img = imread(str(filepath))
-            imwrite(str(filepath.with_suffix(extension)), img)
-            filepath.unlink()
+            with tqdm(total=px*px, desc='data') as pb:
+                values = _algoValues(algo, center, radius, px, pb)
+            if cache:
+                cachepath.touch()
+                np.save(cachepath, values)
+
+        colormat = _applyColors(values, cmap, cmp, cpc, ic)
+        imwrite(str(filepath), colormat[::-1])
 
     def initializeArgs(
-        cmap, cmo, fn, alg, center, radius, px, it, **kwargs
+        cmap, cmo, fn, ext, alg, 
+        center, radius, px, it, **kwargs
     ):
         cmap = cm.get_cmap(cmap)
         if cmo.name == 'reversed':
             cmap = cmap.reversed()
 
         if fn == '': fn = ' '.join(argv)
-        filepath = img_dir / Path(fn + '.ppm')
+        filepath = img_dir / Path(fn + ext)
 
         if argv[1] == 'mandelbrot': arg = 'mandelbrot'
         if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
@@ -239,6 +195,7 @@ if __name__ == '__main__':
         cachepath = data_dir / Path(sfn + '.npy')
 
         return {
+            'center': complex(center),
             'cmap': cmap, 
             'filepath': filepath, 
             'cachepath': cachepath
@@ -251,6 +208,7 @@ if __name__ == '__main__':
         radius: float = Option(0, '-r'),
         px: int = Option(1000, '-px'),
         fn: str = Option('', '-fn'),
+        ext: str = Option('.png', '-ext'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
         cmap: str = Option('inferno', '-cm'),
@@ -258,7 +216,6 @@ if __name__ == '__main__':
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
-        extension: str = Option('ppm', '-ext'),
         cache: bool = False
     ):
         checkConditions(**locals())
@@ -286,14 +243,14 @@ if __name__ == '__main__':
         radius: float = Option(1.4, '-r'),
         px: int = Option(1000, '-px'),
         fn: str = Option('', '-fn'),
+        ext: str = Option('.png', '-ext'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('gist_stern', '-cm'),
+        cmap: str = Option('inferno', '-cm'),
         cmo: ColorMapOrder = Option('normal', '-cmo'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
-        extension: str = Option('ppm', '-ext'),
         cache: bool = False
     ):
         checkConditions(**locals())
