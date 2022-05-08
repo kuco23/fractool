@@ -198,8 +198,6 @@ if __name__ == '__main__':
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
-        args = initializeArgs(**locals())
-        
         p = list(map(complex, polynomial.split()))
         R = juliaRadius(p)
         
@@ -214,6 +212,7 @@ if __name__ == '__main__':
             R2 = R * R
             algo = lambda z: escapetimeJulia(z, p, it, R2)
 
+        args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
     @app.command('mandelbrot')
@@ -231,13 +230,12 @@ if __name__ == '__main__':
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
-        args = initializeArgs(**locals())
-        
         if alg.name == 'DEM': 
             algo = lambda c: demMandelbrot(c, it)
         if alg.name == 'escapetime': 
             algo = lambda c: escapetimeMandelbrot(c, it)
-    
+
+        args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
     app()
