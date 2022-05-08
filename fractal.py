@@ -141,25 +141,11 @@ if __name__ == '__main__':
         continuous = 'continuous'
         inverted = 'inverted'
     
-    def checkConditions(center, radius, cpc, cmp, **kwargs):
-        if center != 0 and radius is None:
-            raise Exception(
-                'if center is non-trivial, '
-                'then radius must be provided'
-            )
-        if cpc and cmp != 1: 
-            raise Exception(
-                'color map percentile and '
-                'colormap power cannot be both provided'
-            )
-    
     def drawFractal(
         algo, radius, center, px, 
         cmap, cmp, cpc, ic, cache,
         filepath, cachepath, **kwargs
-    ):
-        filepath.touch()
-        
+    ):        
         # check if data for image is cached
         if cachepath.exists():
             print('using cached data...')
@@ -178,6 +164,12 @@ if __name__ == '__main__':
         cmap, fn, ext, alg,  
         center, radius, px, it, **kwargs
     ):  
+        if center != "0" and radius is None:
+            raise Exception(
+                'if center is non-trivial, '
+                'then radius must be provided'
+            )
+            
         filename = Path((fn or ' '.join(argv)) + ext)
         if argv[1] == 'mandelbrot': arg = 'mandelbrot'
         if argv[1] == 'julia': arg = f'julia [{argv[2]}]'
@@ -206,8 +198,8 @@ if __name__ == '__main__':
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
-        checkConditions(**locals())
-
+        args = initializeArgs(**locals())
+        
         p = list(map(complex, polynomial.split()))
         R = juliaRadius(p)
         
@@ -222,7 +214,6 @@ if __name__ == '__main__':
             R2 = R * R
             algo = lambda z: escapetimeJulia(z, p, it, R2)
 
-        args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
     @app.command('mandelbrot')
@@ -240,14 +231,13 @@ if __name__ == '__main__':
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
-        checkConditions(**locals())
-
+        args = initializeArgs(**locals())
+        
         if alg.name == 'DEM': 
             algo = lambda c: demMandelbrot(c, it)
         if alg.name == 'escapetime': 
             algo = lambda c: escapetimeMandelbrot(c, it)
-        
-        args = initializeArgs(**locals())
+    
         drawFractal(**{**locals(), **args})
 
     app()
