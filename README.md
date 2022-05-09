@@ -10,8 +10,8 @@ python fractal.py julia "1 0 0.5"
 -cm cubehelix -px 2000 -fn julia_img -ext .png --cache
 ```
 ```bash
-python fractal.py mandelbrot 
--cm gist_stern_r -it 200 -alg DEM -fn mandelbrot_img -ext .jpg
+fractal.py mandelbrot
+-px 2000 -it 500 -cmp 0.7 -fn mandelbrot_img -ext .png
 ```
 
 ### CLI arguments
