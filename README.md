@@ -19,7 +19,7 @@ fractal.py mandelbrot
 - **polynomial:** If you chose `julia` as the first argument, then you must also specify the associated polynomial. Those are formatted as strings, e.g. `"1 2 3"` means the polynomial `1*z^2 + 2*z + 3`.
 - **center:** This is the center around which the image is focused. It defaults to 0 and is set by e.g. `-c "1 + 0.5j"`.
 - **radius:** This is the radius around the center, set by e.g. `-r 2`. If center is 0, then the radius can be calculated algorithmically. Else, you have to specify it.
-- **algorithm:** You can choose the algorithm used for drawing a chosen fractal as e.g. `-alg` following by either `escapetime` or `DEM` (Distance estimation method). The default is `DEM`.
+- **algorithm:** You can choose the algorithm used for drawing a chosen fractal as `-alg` following by either `escapetime` or `DEM` (Distance estimation method). The default is `DEM`.
 - **iterations:** This is the number of iterations that approximate convergance, used by the chosen algorithm. This can be set by `-it` following by some positive integer. The default is `1000`.
 - **pixels:** This is the square root of the number of pixels of the generated square image. Set by `-px` followed by positive integer. Default is `1000`.
 - **colormap:** You can specify the colormap by adding `-cm` following by some `matplotlib` colormap name. The default for julia sets is `inferno`, while for the mandelbrot set it's `gist_stern_r`. You can check the available options [here](https://matplotlib.org/stable/tutorials/colors/colormaps.html) or `import cm from matplotlib` and doing `dir(cm)`.
