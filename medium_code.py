@@ -25,10 +25,8 @@ def drawImage(filename, rgbfun, n):
     for i in range(n):
         for j in range(n):
             rgb01 = rgbfun(i, j) # rgb(a) values in [0,1]
-            r, g, b, *a = (int(255*x) for x in rgb01) # rgb(a) values in {0,...,255}
-            colormat[i,j,0] = b
-            colormat[i,j,1] = g
-            colormat[i,j,2] = r
+            for k in range(3): 
+                colormat[i,j,k] = int(255 * rgb01[2-k])
     imwrite(filename, colormat)
 
 def mapToComplexPlaneCenter(n, c, r, i, j):
@@ -177,8 +175,7 @@ def inCardioidOrCircle(c):
 
 if __name__ == '__main__':
     
-    drawDemMandelbrot(
-        2000, -0.8, 1.4,
-        cm.gist_stern.reversed(),
-        100, 10**20
+    drawEscapetimeJulia(
+      500, [1, 0, -0.7508387093588403-0.046j],
+      cm.inferno.reversed(), 250
     )

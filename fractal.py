@@ -3,7 +3,6 @@ from functools import reduce
 from matplotlib import cm
 from matplotlib.colors import Normalize
 import numpy as np
-from tqdm import tqdm
 
 L = 1.000001
 OVERFLOW = 10**20
@@ -76,9 +75,8 @@ def demJulia(z, p, dp, K, R, overflow=OVERFLOW):
 # generates px^2 points on complex plane 
 # with radius <= radius and center center
 def _complexlattice(center, radius, px):
-    cx, cy = center.real, center.imag
-    ReS = cx - radius
-    ImS = cy - radius
+    ReS = center.real - radius
+    ImS = center.imag - radius
     dim = dre = 2 * radius / px
     dz = complex(dre, 0)
     zk = complex(ReS, ImS)
@@ -124,6 +122,7 @@ if __name__ == '__main__':
     from enum import Enum
     from typing import Tuple
     from typer import Typer, Option
+    from tqdm import tqdm
     from cv2 import imwrite # pip install opencv-python
 
     img_dir = Path('img/')
@@ -192,7 +191,7 @@ if __name__ == '__main__':
         ext: str = Option('.png', '-ext'),
         it: int = Option(250, '-it'),
         alg: Algorithm = Option('DEM', '-alg'),
-        cmap: str = Option('inferno', '-cm'),
+        cmap: str = Option('inferno_r', '-cm'),
         cmp: float = Option(1, '-cmp'),
         cpc: Tuple[int,float,float] = Option(None, '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
