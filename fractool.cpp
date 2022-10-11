@@ -51,23 +51,23 @@ int escapetimeMandelbrot(
 }
 
 int escapetimeJulia(
-  const complex<double> z,
+  const complex<double> &z,
   const complex_polynomial &p,
   const int &iterlim
 ) {
   complex<double> zk = z;
-  float radius = radiusJulia(p);
+  double radius = radiusJulia(p);
   int count;
   for (count = 1; count < iterlim && abs(zk) < radius; count++)
     zk = horner(p, zk);
   return (count < iterlim) ? count : 0;
 }
 
-float demMandelbrot(
-  const complex<double> c,
+double demMandelbrot(
+  const complex<double> &c,
   const int &iterlim,
-  const float &radius,
-  const float &overflow
+  const double &radius,
+  const double &overflow
 ) {
   complex<double> ck = c;
   complex<double> dk = 1;
@@ -81,22 +81,22 @@ float demMandelbrot(
     ck *= ck;
     ck += c;
   }
-  const float absck = abs(ck);
+  const double absck = abs(ck);
   if (absck < radius) return 0;
-  const float absdk = abs(dk);
+  const double absdk = abs(dk);
   if (absdk == 0) return 0; // rarely happens
-  const float estimate = log2(absck) * absck / absdk;
+  const double estimate = log2(absck) * absck / absdk;
   return -log2(estimate);
 }
 
-float demJulia(
-  const complex<double> z,
+double demJulia(
+  const complex<double> &z,
   const complex_polynomial &p,
   const complex_polynomial &dp,
   const int &iterlim,
-  const float &overflow
+  const int &overflow
 ) {
-  float radius = radiusJulia(p);
+  double radius = radiusJulia(p);
 
   complex<double> zk = z;
   complex<double> dk = 1;
@@ -108,32 +108,32 @@ float demJulia(
     dk = horner(dp, zk) * dk;
     zk = horner(p, zk);
   }
-  const float abszk = abs(zk);
+  const double abszk = abs(zk);
   if (abszk < radius) return 0;
-  const float absdk = abs(dk);
+  const double absdk = abs(dk);
   if (absdk == 0) return 0; // rarely happens
-  const float estimate = log2(abszk) * abszk / absdk;
+  const double estimate = log2(abszk) * abszk / absdk;
   return -log2(estimate);
 }
 
-[][]float demJuliaValues(
+[][]double demJuliaValues(
   const complex_polynomial p,
   const complex_polynomial dp,
   const int iterlim,
-  const float overflow,
+  const int overflow,
   const complex<double> center,
-  const float radius,
+  const double radius,
   const int px
 ) {
-  [px][px]float values;
-  complex<double> z(center.real() - radius, center.imag());
-  float d = 2 * radius / px;
-  complex<double> dz = d;
+  [px][px]double values;
+  complex<double> z(center.real() - radius, center.imag() - radius);
+  double dz = 2 * radius / px;
   for (int i = 0; i < px; i++) {
     for (int j = 0; j < px; j++) {
       values[i][j] = demJulia(z, p, dp, iterlim, overflow);
+      z += d;
     }
-    z = complex<double>(center.real() - radius, z.imag());
+    z = complex<double>(center.real() - radius, z.imag() + d);
   }
   return values;
 }

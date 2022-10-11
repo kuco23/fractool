@@ -88,12 +88,12 @@ def _complexlattice(center, radius, px):
 
 def _algoValues(algo, center, radius, px, pb): 
     points = _complexlattice(center, radius, px)
-    pixels = np.empty((px, px), dtype=float)
+    values = np.empty((px, px), dtype=float)
     for j in range(px):
         for i in range(px):
-            pixels[j,i] = algo(next(points))
+            values[j,i] = algo(next(points))
         pb.update(px)
-    return pixels
+    return values
 
 def _applyColors(values, colormap, cmp, cpc, ic):    
     m, M = values.min(), values.max()
