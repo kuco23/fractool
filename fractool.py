@@ -101,7 +101,7 @@ def _applyColors(values, colormap, cmp, cpc, ic):
     values[values == 0] = m if ic == 'continuous' else M
     normed = Normalize(m, M)(values)
     
-    if cpc is not None:
+    if cpc != (None, None, None):
         p, pf, pc = cpc
         q = np.percentile(normed, p)
         filt = normed <= q
@@ -181,7 +181,7 @@ if __name__ == '__main__':
             'cachepath': data_dir / cachename
         }
 
-    @app.command('julia')
+    @app.command()
     def julia(
         polynomial: str,
         center: str = Option("0", '-c'),
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         alg: Algorithm = Option('DEM', '-alg'),
         cmap: str = Option('inferno_r', '-cm'),
         cmp: float = Option(1, '-cmp'),
-        cpc: Tuple[int,float,float] = Option(None, '-cpc'),
+        cpc: Tuple[int,float,float] = Option((None, None, None), '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
@@ -214,7 +214,7 @@ if __name__ == '__main__':
         args = initializeArgs(**locals())
         drawFractal(**{**locals(), **args})
 
-    @app.command('mandelbrot')
+    @app.command()
     def mandelbrot(
         center: str = Option("-0.8", '-c'),
         radius: float = Option(1.4, '-r'),
@@ -225,7 +225,7 @@ if __name__ == '__main__':
         alg: Algorithm = Option('DEM', '-alg'),
         cmap: str = Option('gist_stern_r', '-cm'),
         cmp: float = Option(1, '-cmp'),
-        cpc: Tuple[int,float,float] = Option(None, '-cpc'),
+        cpc: Tuple[int,float,float] = Option((None, None, None), '-cpc'),
         ic: InteriorColor = Option('continuous', '-ic'),
         cache: bool = False
     ):
